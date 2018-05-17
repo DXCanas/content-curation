@@ -26,4 +26,4 @@ RUN mkdir /src
 WORKDIR /src
 
 ENTRYPOINT ["python", "deploy/entrypoint.py"]
-CMD ["make", "devserver"]
+CMD ["make", "migrate", "collectstatic", "devserver"]
