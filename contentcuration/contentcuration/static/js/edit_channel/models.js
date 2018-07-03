@@ -364,8 +364,8 @@ var ContentNodeModel = BaseModel.extend({
             });
         });
     },
+    // will get a perseus-formatted assessment item given the db's PK.
     get_perseus_assessment_item(pk){
-      console.log('this even being called?');
       return new Promise((resolve, reject) => {
         $.ajax({
           method: 'GET',
