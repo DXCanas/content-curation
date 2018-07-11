@@ -374,7 +374,7 @@ var ContentNodeModel = BaseModel.extend({
             resolve(JSON.parse(response));
           },
           error(response) {
-            reject(JSON.parse(response));
+            reject(response);
           },
         });
       });
