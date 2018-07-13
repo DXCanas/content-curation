@@ -413,10 +413,14 @@ var ContentNodeCollection = BaseCollection.extend({
                     }
                 })
             });
-            Promise.all([fileCollection.save(), assessmentCollection.save()]).then(function() {
+            Promise.all([fileCollection.save(), assessmentCollection.save()]).then(([files, assessments]) => {
                 Backbone.sync("update", self, {
                     url: self.model.prototype.urlRoot(),
                     success: function(data){
+                        const contentNodeSyncs = assessments.groupBy('contentnode') || {};
+                        Object.keys(contentNodeSyncs).forEach(contentNodeId => {
+                            self.get(contentNodeId).trigger('sync:read:assessments', contentNodeSyncs[contentNodeId]);
+                        });
                         saveResolve(new ContentNodeCollection(data));
                     },
                     error:function(obj, error){
