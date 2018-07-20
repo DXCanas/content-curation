@@ -1,7 +1,3 @@
-prodserver: migrate collectstatic ensurecrowdinclient downloadmessages compilemessages
-	cd contentcuration/ && gunicorn contentcuration.wsgi:application --timeout=500 --error-logfile=/var/log/gunicorn-error.log --workers=3 --bind=0.0.0.0:8000 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
-
-# temporary copy of prodserver to match our config in nanobox, until we move out of our v1 deployscripts
 altprodserver: migrate collectstatic ensurecrowdinclient downloadmessages compilemessages
 	cd contentcuration/ && gunicorn contentcuration.wsgi:application --timeout=500 --error-logfile=/var/log/gunicorn-error.log --workers=3 --bind=0.0.0.0:8081 --pid=/tmp/contentcuration.pid --log-level=debug || sleep infinity
 
@@ -16,11 +12,11 @@ devserver:
 	yarn run devserver
 
 test:
-	cd contentcuration; pytest
+	yarn install && yarn run unittests
 
 endtoendtest:
-	# launch all studio's dependent services using docker-compose, and then run the tests
-	docker-compose run studio-app make test
+	# launch all studio's dependent services using docker-compose, and then run the tests	
+	docker-compose run studio-app make test -e DJANGO_SETTINGS_MODULE=contentcuration.test_settings
 
 collectstatic: migrate
 	python contentcuration/manage.py collectstatic --noinput
@@ -31,7 +27,7 @@ migrate:
 	python contentcuration/manage.py loadconstants
 
 ensurecrowdinclient:
-  ls -l crowdin-cli.jar || curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar
+	ls -l crowdin-cli.jar || curl -L https://storage.googleapis.com/le-downloads/crowdin-cli/crowdin-cli.jar -o crowdin-cli.jar
 
 makemessages:
 	# generate frontend messages
