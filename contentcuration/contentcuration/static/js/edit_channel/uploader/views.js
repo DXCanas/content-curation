@@ -255,7 +255,15 @@ var EditMetadataView = BaseViews.BaseEditableListView.extend({
     this.edit_list.handle_if_individual();
   },
   load_preview:function(view){
-     view.load_preview_display(this.$("#metadata_preview"));
+    if(view.preview_view){
+      view.preview_view.remove();
+    }
+
+    view.preview_view = new Previewer.PreviewView({
+      model: view.model
+    });
+
+    this.$("#metadata_preview").html(view.preview_view.el);
   },
   load_questions:function(view){
     view.load_question_display(this.$("#metadata_questions"));
@@ -1228,15 +1236,6 @@ var UploadedItem = BaseViews.BaseListEditableItemView.extend({
         allow_edit: this.allow_edit
       });
       formats_el.html(this.exercise_view.el);
-  },
-  load_preview_display:function(formats_el){
-    if(this.preview_view){
-      this.preview_view.remove();
-    }
-    this.preview_view = new Previewer.PreviewView({
-      model: this.model
-    });
-    formats_el.html(this.preview_view.el);
   },
   handle_assessment_items:function(data){
     this.model.set('assessment_items', data);
