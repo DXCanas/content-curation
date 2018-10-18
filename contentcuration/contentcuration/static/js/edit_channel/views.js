@@ -1117,7 +1117,7 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 
 	bind_workspace_functions:function(){
 		this.bind_node_functions();
-		_.bindAll(this, 'copy_item', 'open_preview', 'open_edit', 'handle_drop',
+		_.bindAll(this, 'copy_item', 'open_edit', 'handle_drop',
 			'handle_checked', 'add_to_clipboard', 'add_to_trash', 'make_droppable',
 			'add_nodes', 'add_topic', 'open_move', 'handle_move', 'make_copy');
 	},
@@ -1127,15 +1127,6 @@ var BaseWorkspaceListNodeItemView = BaseListNodeItemView.extend({
 		// 	var DragHelper = require("edit_channel/utils/drag_drop");
 		// 	DragHelper.addTopicDragDrop(this, this.open_folder, this.handle_drop);
 		// }
-	},
-	open_preview:function(){
-		var Previewer = require("edit_channel/preview/views");
-		$("#main-content-area").append("<div id='dialog'></div>");
-		var data={
-			el : $("#dialog"),
-			model: this.model,
-		}
-		new Previewer.PreviewModalView(data);
 	},
 	open_move:function(source){
 		var MoveView = require("edit_channel/move/views");
