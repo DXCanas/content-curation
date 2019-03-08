@@ -4,11 +4,13 @@ import os
 from wsgiref.util import FileWrapper
 
 from django.conf import settings
+from django.core.exceptions import PermissionDenied
 from django.core.files import File as DjFile
 from django.core.files.storage import default_storage
 from django.http import Http404
 from django.http import HttpResponse
 from django.http import HttpResponseBadRequest
+from django.http import HttpResponseForbidden
 from le_utils.constants import content_kinds
 from le_utils.constants import exercises
 from le_utils.constants import format_presets
@@ -81,7 +83,6 @@ def file_create(request):
     presets = FormatPreset.objects.filter(allowed_formats__extension__contains=ext[1:].lower())
     kind = presets.first().kind
     preferences = json.loads(request.POST.get('content_defaults', None) or "{}")
-
 
     license = License.objects.filter(license_name=preferences.get('license')).first()  # Use filter/first in case preference hasn't been set
     license_id = license.pk if license else None
@@ -169,7 +170,10 @@ def thumbnail_upload(request):
 
     fobj = request.FILES.values()[0]
     checksum = get_hash(DjFile(fobj))
-    request.user.check_space(fobj._size, checksum)
+    try:
+        request.user.check_space(fobj._size, checksum)
+    except PermissionDenied as e:
+        return HttpResponseForbidden(str(e))
 
     formatted_filename = write_file_to_storage(fobj)
 
