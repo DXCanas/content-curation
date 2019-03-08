@@ -1,6 +1,11 @@
 <template>
   <div class="channel-details-top">
-    <img :alt="channel.name" :src="channel.thumbnail_url">
+    <Thumbnail
+      :thumbnailUrl="channel.thumbnail_url"
+      :alt="channel.name"
+      :kindId="'channel'"
+      :displayOnly="true"
+    />
     <div class="channel-section">
       <div class="language-wrapper">
         <div v-if="language">
@@ -54,12 +59,14 @@
 
   import _ from 'underscore';
   import { mapState } from 'vuex';
-  import ChannelDownloadDropdown from './ChannelDownloadDropdown.vue';
   import State from 'edit_channel/state';
   import Constants from 'edit_channel/constants/index';
 
   // Components
+  import ChannelDownloadDropdown from './ChannelDownloadDropdown.vue';
   import ToggleText from 'edit_channel/sharedComponents/ToggleText.vue';
+  import Thumbnail from 'edit_channel/image/views/Thumbnail.vue';
+
 
   export default {
     name: 'ChannelMetadataSection',
@@ -72,6 +79,7 @@
     components: {
       ToggleText,
       ChannelDownloadDropdown,
+      Thumbnail,
     },
     computed: {
       ...mapState('channel_list', {
@@ -103,12 +111,9 @@
 
     grid-template-columns: 1fr 3fr;
     padding: 0 20px 40px;
-    img {
-      width: 130px;
-      height: 130px;
-      margin-top: 35px;
+    /deep/ img {
       border: 2px solid @gray-500;
-      object-fit: cover;
+      margin-top: 35px;
     }
     .channel-section {
       padding-left: 20px;
