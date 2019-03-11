@@ -13,6 +13,7 @@ import Uppy from '@uppy/core';
 import XHRUpload from '@uppy/xhr-upload';
 import Dashboard from '@uppy/dashboard';
 import GoogleDrive from '@uppy/google-drive';
+import Dropbox from '@uppy/dropbox';
 import Url from '@uppy/url';
 import Constants from 'edit_channel/constants/index';
 import get_cookie from 'utils/get_cookie';
@@ -85,6 +86,9 @@ export default {
               .where({supplementary: false})
               .pluck('associated_mimetypes')
               .flatten().uniq().value();
+    },
+    serverUrl() {
+      return "http://localhost:3020";
     }
   },
   data() {
@@ -103,8 +107,10 @@ export default {
       }
     },
     closeModal() {
+      // TODO: Check for unsaved files
       const dashboard = this.uppy.getPlugin('Dashboard');
       if(this.uppy && !this.inline && dashboard.isModalOpen()) {
+        this.uppy.reset();
         dashboard.closeModal();
       }
     },
@@ -120,9 +126,7 @@ export default {
         meta: {
           preset: this.presetId,
           ...this.params
-        },
-        // onBeforeFileAdded: (currentFile, files) => Promise.resolve(),
-        // onBeforeUpload: (files, done) => Promise.resolve(),
+        }
       })
       .use(XHRUpload, {
         endpoint: this.endpoint,
@@ -132,7 +136,6 @@ export default {
         getResponseError: (responseText, xhr) => {
           console.error(this.$tr("uploadError"), responseText);
           alert(this.$tr("uploadError"), responseText);
-          this.uppy.reset();
           this.closeModal();
           return new Error(responseText)
         }
@@ -168,7 +171,7 @@ export default {
       })
       .use(Url, {
         target: Dashboard,
-        serverUrl: 'https://companion.uppy.io',
+        serverUrl: this.serverUrl,
         title: this.$tr('link'),
         locale: {
           strings: {
@@ -181,12 +184,21 @@ export default {
       })
       .use(GoogleDrive, {
         target: Dashboard,
-        serverUrl: 'https://companion.uppy.io'
+        serverUrl: this.serverUrl
       })
-      .on('file-added', this.addedFile)
-      .on('upload-success', this.onUpload)
-      .on('upload-error', this.onError)
-      .on('file-removed', this.onCancel)
+      .use(Dropbox, {
+        target: Dashboard,
+        serverUrl: this.serverUrl
+      })
+      // .on('file-added', this.addedFile)
+      // .on('upload-success', this.onUpload)
+      .on('complete', (result) => {
+        console.log(result.failed, result.successful[0], result.uploadID);
+        console.log(JSON.stringify(result.successful[0]))
+      })
+      // .on('upload-error', this.onError)
+      // .on('file-removed', this.onCancel)
+      // .on('file-removed', this.onCancel)
       .run();
     },
     addedFile(file) {
@@ -194,8 +206,7 @@ export default {
     },
     onUpload(file, response) {
       this.$emit('uploaded', response.body);
-      this.uppy.reset();
-      this.closeModal();
+      // !this.multiple && this.closeModal();
     },
     onError(file, error, response) {
       this.$emit('error');
