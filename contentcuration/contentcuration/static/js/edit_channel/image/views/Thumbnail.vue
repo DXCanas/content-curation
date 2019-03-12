@@ -13,18 +13,26 @@
     @cancelled="$emit('uploadCancelled')"
   />
   <div class="img-wrapper">
-    <img class="upload-trigger" :src="thumbnailSrc" :alt="alt" :class="{square: isChannel}"/>
+    <img
+      class="upload-trigger"
+      :src="thumbnailSrc"
+      :alt="alt"
+      :class="{square: isChannel}"
+    />
   </div>
+
   <div v-if="cropping" class="image-options" :class="{square: isChannel}">
     <a :title="$tr('cancel')" @click.stop="cancelCrop">not_interested</a>
     <a :title="$tr('submit')" @click.stop="submitCrop">check</a>
   </div>
+
   <div v-else class="image-options" :class="{square: isChannel}">
     <a :title="$tr('upload')" @click="uploadImage">image</a>
     <a v-if="!isDefault" :title="$tr('crop')" @click="cropping = true">crop</a>
     <a v-if="kindId !== 'channel'" :title="$tr('generate')" @click="openThumbnailModal">camera</a>
     <a v-if="!isDefault" :title="$tr('remove')" @click="removeThumbnail">clear</a>
   </div>
+
 </div>
 
 </template>
@@ -33,7 +41,7 @@
 <script>
 
 import FileUpload from './FileUpload.vue';
-import Constants from 'edit_channel/constants/index';
+import { FormatPresets } from 'edit_channel/constants/index';
 import { Croppie } from 'croppie';
 
 export default {
@@ -91,8 +99,9 @@ export default {
       return window.Urls.thumbnail_upload();
     },
     preset() {
+      console.info('FormatPresets', FormatPresets);
       let kind = (this.isChannel)? null : this.kindId;
-      return _.findWhere(Constants.FormatPresets, {kind_id: kind, thumbnail: true});
+      return _.findWhere(FormatPresets, {kind_id: kind, thumbnail: true});
     },
     isChannel() {
       return this.kindId === "channel";
