@@ -4,7 +4,7 @@
       :thumbnailUrl="channel.thumbnail_url"
       :alt="channel.name"
       :kindId="'channel'"
-      :displayOnly="true"
+      :edit="true"
     />
     <div class="channel-section">
       <div class="language-wrapper">

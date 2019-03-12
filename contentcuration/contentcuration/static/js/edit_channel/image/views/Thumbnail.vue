@@ -1,8 +1,8 @@
 <template>
 
-<div :class="{'thumbnail-uploader': !displayOnly}">
+<div :class="{'thumbnail-uploader': edit}">
   <FileUpload
-    v-if="!displayOnly"
+    v-if="edit"
     :presetId="preset.id"
     :endpoint="endpoint"
     :trigger="'.upload-trigger'"
@@ -47,13 +47,9 @@ export default {
     remove: "Remove"
   },
   props: {
-    displayOnly: {
+    edit: {
       type: Boolean,
-      default: false
-    },
-    modelId: {
-      type: String,
-      required: false
+      default: true
     },
     thumbnailUrl: {
       type: String,
@@ -61,7 +57,8 @@ export default {
     },
     defaultUrl: {
       type: String,
-      default: '/static/img/kolibri_placeholder.png'
+      default: '/static/img/kolibri_placeholder.png',
+      required: false,
     },
     kindId: {
       type: String,

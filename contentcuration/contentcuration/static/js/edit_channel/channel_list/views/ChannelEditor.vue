@@ -1,17 +1,16 @@
 <template>
   <div class="channel-editor">
-    <div class="channel-thumbnail">
-      <Thumbnail
-        :thumbnailUrl="channel.thumbnail_url"
-        :modelId="channel.id"
-        :kindId="'channel'"
-        @removeThumbnail="removeChannelThumbnail"
-        @uploadedThumbnail="setChannelThumbnail"
-        @uploadStarted="uploading = true"
-        @thumbnailError="uploading = false"
-        @uploadCancelled="uploading = false"
-      />
-    </div>
+
+    <Thumbnail
+      :thumbnailUrl="channel.thumbnail_url"
+      kindId="channel"
+      class="channel-thumbnail"
+      @removeThumbnail="removeChannelThumbnail"
+      @uploadedThumbnail="setChannelThumbnail"
+      @uploadStarted="uploading = true"
+      @thumbnailError="uploading = false"
+      @uploadCancelled="uploading = false"
+    />
 
     <form class="channel-section" @submit.prevent="submitChannel">
       <!-- Previously used h4, which carries semantic meaning. Size is just style -->
