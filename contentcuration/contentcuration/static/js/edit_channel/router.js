@@ -1,9 +1,19 @@
+import VueRouter from 'vue-router';
+import Vue from 'vue';
+
 var _ = require("underscore");
 var Backbone = require("backbone");
 var State = require("./state");
 
 //var saveDispatcher = _.clone(Backbone.Events);
 var URL_CHAR_LIMIT = 7;
+
+const editChannelRoutes = {
+  channelHome: '',
+  editPage: ':channel/edit/:topic?/:node?)',
+  stagingPage: ':channel/staging/:topic?/:node?',
+  previewPage: ':channel/view/:topic?/:node?',
+};
 
 var ChannelEditRouter  = Backbone.Router.extend({
   initialize: function(options) {
