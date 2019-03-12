@@ -12,6 +12,7 @@
     @error="$emit('thumbnailError')"
     @cancelled="$emit('uploadCancelled')"
   />
+
   <div class="img-wrapper">
     <img
       class="upload-trigger"
@@ -55,26 +56,33 @@ export default {
     remove: "Remove"
   },
   props: {
+    // Toggles edit mode
     edit: {
       type: Boolean,
-      default: true
+      default: true,
     },
+    // URL for thumbnail to be displayed
+    // TODO go with a v-model?
     thumbnailUrl: {
       type: String,
-      required: false
+      required: false,
     },
+    // Define default URL if it doesn't exist
     defaultUrl: {
       type: String,
       default: '/static/img/kolibri_placeholder.png',
       required: false,
     },
+    // Used to determine settings based on the node being displayed
     kindId: {
       type: String,
-      required: true
+      required: true,
     },
+    // Alt text for this image
     alt: {
       type: String,
-      required: false
+      default: '',
+      required: false,
     }
   },
   components: {
