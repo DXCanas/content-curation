@@ -1,57 +1,58 @@
 <template>
 
-<div :class="{'thumbnail-uploader': edit}">
-    <img
-      class="upload-trigger"
-      :src="thumbnailSrc"
-      :alt="alt"
-      :class="ratioClass"
-    />
+  <!-- Superficial classname. Only useful for DOM debugging -->
+  <div :class="{'thumbnail-editor': edit}">
+      <img
+        class="upload-trigger"
+        :src="thumbnailSrc"
+        :alt="alt"
+        :class="ratioClass"
+      />
 
-    <!-- Upload mode -->
-    <FileUploadModal
-      v-if="uploading"
-      :allowedMimetypes="allowedMimetypes"
-      :endpoint="endpoint"
-      :trigger="'.upload-trigger'"
-      ref="fileUpload"
-      @uploaded="onUpload"
-      @started="$emit('uploadStarted')"
-      @error="$emit('thumbnailError')"
-      @cancelled="$emit('uploadCancelled')"
-    />
+      <template v-if="edit">
+        <!-- Upload mode -->
+        <FileUploadModal
+          v-if="uploading"
+          :allowedMimetypes="allowedMimetypes"
+          :endpoint="endpoint"
+          :trigger="'.upload-trigger'"
+          @uploaded="onUpload"
+          @started="$emit('uploadStarted')"
+          @error="$emit('thumbnailError')"
+          @cancelled="$emit('uploadCancelled')"
+        />
 
-    <!-- Crop mode -->
-  <div v-if="cropping" class="image-options" :class="ratioClass">
-    <a :title="$tr('cancel')" @click.stop="cancelCrop">
-      not_interested
-    </a>
-    <a :title="$tr('submit')" @click.stop="submitCrop">
-      check
-    </a>
+        <!-- Crop mode -->
+      <div v-if="cropping" class="options-menu" :class="ratioClass">
+        <a :title="$tr('cancel')" @click.stop="cancelCrop">
+          not_interested
+        </a>
+        <a :title="$tr('submit')" @click.stop="submitCrop">
+          check
+        </a>
+      </div>
+
+      <!-- Options Menu -->
+      <div v-else class="options-menu" :class="ratioClass">
+        <!-- Always available -->
+        <a :title="$tr('upload')" @click="uploadImage">
+          image
+        </a>
+
+        <a v-if="thumbnailSet" :title="$tr('crop')" @click="cropping = true">
+          crop
+        </a>
+
+        <a v-if="!isChannel" :title="$tr('generate')" @click="openThumbnailModal">
+          camera
+        </a>
+
+        <a v-if="thumbnailSet" :title="$tr('remove')" @click="removeThumbnail">
+          clear
+        </a>
+      </div>
+    </template>
   </div>
-
-  <!-- Menu -->
-  <div v-else class="image-options" :class="ratioClass">
-    <!-- Always available -->
-    <a :title="$tr('upload')" @click="uploadImage">
-      image
-    </a>
-
-    <a v-if="thumbnailDefined" :title="$tr('crop')" @click="cropping = true">
-      crop
-    </a>
-
-    <a v-if="!isChannel" :title="$tr('generate')" @click="openThumbnailModal">
-      camera
-    </a>
-
-    <a v-if="thumbnailDefined" :title="$tr('remove')" @click="removeThumbnail">
-      clear
-    </a>
-  </div>
-
-</div>
 
 </template>
 
@@ -80,7 +81,6 @@ export default {
       default: false,
     },
     // URL for thumbnail to be displayed
-    // TODO go with a v-model?
     value: {
       type: String,
       required: false,
@@ -113,12 +113,12 @@ export default {
     }
   },
   computed: {
-    thumbnailDefined() {
+    thumbnailSet() {
       return Boolean(this.value);
     },
     // Ensures that we don't propogate changes up to component if we're just using default
     thumbnailSrc() {
-      return this.thumbnailDefined ? this.value : this.defaultUrl;
+      return this.thumbnailSet ? this.value : this.defaultUrl;
     },
     endpoint() {
       return window.Urls.thumbnail_upload();
@@ -139,9 +139,6 @@ export default {
     }
   },
   methods: {
-    uploadImage() {
-      this.$refs.fileUpload.openModal();
-    },
     cancelCrop(event) {
       event.stopImmediatePropagation()
       _.defer(() => {
@@ -156,10 +153,14 @@ export default {
       this.$emit("removeThumbnail");
     },
     onUpload(data) {
-      // Should update prop, as parents are meant to use v-model
+      // Update parent's data (standard v-model functionality)
       this.$emit('input', data.path);
+
+      // Prep data to be sent to vuex state, where the change will take place
       data.encoding = {'base64': data.encoding, 'points': [], 'zoom': 0};
       this.$emit('uploadedThumbnail', data);
+
+      // Ideally, this component receives and emits all the data necessary for submission.
     }
   }
 };
@@ -169,32 +170,36 @@ export default {
 
 <style lang="less" scoped>
 
-@import '../../../../less/global-variables.less';
-@default-image-width: 170px;
-@default-image-height: 100px;
-@default-square-width: 130px;
+  @import '../../../../less/global-variables.less';
+  @default-image-width: 170px;
+  @default-image-height: 100px;
+  @default-square-width: 130px;
 
-img {
-  width: @default-image-width;
-  height: @default-image-height;
-  object-fit: cover;
-  object-position: center;
-  &.square {
-    width: @default-square-width;
-    height: @default-square-width;
-  }
-}
-.image-options {
-  visibility: hidden;
-}
-
-.thumbnail-uploader {
   img {
-    cursor: pointer;
-    border: 4px dashed @gray-400;
-    opacity: 0.8;
+    width: @default-image-width;
+    height: @default-image-height;
+    object-fit: cover;
+    object-position: center;
+    &.square {
+      width: @default-square-width;
+      height: @default-square-width;
+    }
   }
-  .image-options {
+
+  .thumbnail-editor {
+    img {
+      cursor: pointer;
+      border: 4px dashed @gray-400;
+      opacity: 0.8;
+    }
+
+    &:hover .options-menu {
+      visibility: visible;
+    }
+  }
+
+  .options-menu {
+    visibility: hidden;
     display: grid;
     grid-auto-flow: column;
     justify-content: space-around;
@@ -214,10 +219,6 @@ img {
       &:hover{ color: white; }
     }
   }
-  &:hover .image-options {
-    visibility: visible;
-  }
-}
 
 </style>
 
