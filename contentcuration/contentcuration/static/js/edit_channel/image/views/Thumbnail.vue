@@ -1,47 +1,52 @@
 <template>
 
 <div :class="{'thumbnail-uploader': edit}">
-  <FileUploadModal
-    v-if="edit"
-    :allowedMimetypes="allowedMimetypes"
-    :endpoint="endpoint"
-    :trigger="'.upload-trigger'"
-    ref="fileUpload"
-    @uploaded="onUpload"
-    @started="$emit('uploadStarted')"
-    @error="$emit('thumbnailError')"
-    @cancelled="$emit('uploadCancelled')"
-  />
-
-  <div class="img-wrapper">
     <img
       class="upload-trigger"
       :src="thumbnailSrc"
       :alt="alt"
       :class="ratioClass"
     />
-  </div>
 
+    <!-- Upload mode -->
+    <FileUploadModal
+      v-if="uploading"
+      :allowedMimetypes="allowedMimetypes"
+      :endpoint="endpoint"
+      :trigger="'.upload-trigger'"
+      ref="fileUpload"
+      @uploaded="onUpload"
+      @started="$emit('uploadStarted')"
+      @error="$emit('thumbnailError')"
+      @cancelled="$emit('uploadCancelled')"
+    />
+
+    <!-- Crop mode -->
   <div v-if="cropping" class="image-options" :class="ratioClass">
-    <a :title="$tr('cancel')" @click.stop="cancelCrop">not_interested</a>
-    <a :title="$tr('submit')" @click.stop="submitCrop">check</a>
+    <a :title="$tr('cancel')" @click.stop="cancelCrop">
+      not_interested
+    </a>
+    <a :title="$tr('submit')" @click.stop="submitCrop">
+      check
+    </a>
   </div>
 
+  <!-- Menu -->
   <div v-else class="image-options" :class="ratioClass">
-    <a :title="$tr('upload')" @click="uploadImage">image</a>
-    <a
-      v-if="value"
-      :title="$tr('crop')"
-      @click="cropping = true"
-    >
+    <!-- Always available -->
+    <a :title="$tr('upload')" @click="uploadImage">
+      image
+    </a>
+
+    <a v-if="thumbnailDefined" :title="$tr('crop')" @click="cropping = true">
       crop
     </a>
-    <a v-if="kindId !== 'channel'" :title="$tr('generate')" @click="openThumbnailModal">camera</a>
-    <a
-      v-if="value"
-      :title="$tr('remove')"
-      @click="removeThumbnail"
-    >
+
+    <a v-if="!isChannel" :title="$tr('generate')" @click="openThumbnailModal">
+      camera
+    </a>
+
+    <a v-if="thumbnailDefined" :title="$tr('remove')" @click="removeThumbnail">
       clear
     </a>
   </div>
@@ -104,27 +109,34 @@ export default {
   data() {
     return {
       cropping: false,
+      uploading: false,
     }
   },
   computed: {
+    thumbnailDefined() {
+      return Boolean(this.value);
+    },
     // Ensures that we don't propogate changes up to component if we're just using default
     thumbnailSrc() {
-      return this.value || this.defaultUrl;
+      return this.thumbnailDefined ? this.value : this.defaultUrl;
     },
     endpoint() {
       return window.Urls.thumbnail_upload();
     },
     allowedMimetypes() {
       // console.info('FormatPresets', FormatPresets);
-      let kind = this.kindId === "channel" ? null : this.kindId;
+      let kind = this.isChannel ? null : this.kindId;
       return _.findWhere(FormatPresets, {kind_id: kind, thumbnail: true}).associated_mimetypes;
     },
     ratioClass() {
-      if (this.kindId === "channel") {
+      if (this.isChannel) {
         return 'square';
       }
       return '';
     },
+    isChannel() {
+      return this.kindId === "channel";
+    }
   },
   methods: {
     uploadImage() {
