@@ -18,6 +18,7 @@ import Url from '@uppy/url';
 import Constants from 'edit_channel/constants/index';
 import get_cookie from 'utils/get_cookie';
 import { alert } from 'edit_channel/utils/dialog';
+import _ from 'underscore';
 
 // import ProgressBar from '@uppy/progress-bar';
 // import Retriever from '@uppy/golden-retriever';
