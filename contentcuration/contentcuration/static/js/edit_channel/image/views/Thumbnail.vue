@@ -56,6 +56,7 @@
 import FileUploadModal from './FileUploadModal.vue';
 import { FormatPresets } from 'edit_channel/constants/index';
 import { Croppie } from 'croppie';
+import _ from 'underscore';
 
 export default {
   name: 'Thumbnail',
