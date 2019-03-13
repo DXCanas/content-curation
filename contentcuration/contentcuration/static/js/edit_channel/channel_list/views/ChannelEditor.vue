@@ -2,9 +2,10 @@
   <div class="channel-editor">
 
     <Thumbnail
-      :thumbnailUrl="channel.thumbnail_url"
+      v-model="thumbnail"
       kindId="channel"
       class="channel-thumbnail"
+      :edit="true"
       @removeThumbnail="removeChannelThumbnail"
       @uploadedThumbnail="setChannelThumbnail"
       @uploadStarted="uploading = true"
@@ -121,14 +122,11 @@
 
 <script>
 
-  import _ from 'underscore';
   import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
   import { tabMixin } from '../mixins';
   import { getBackboneChannel } from '../utils';
-  import Constants from 'edit_channel/constants/index';
+  import { Languages } from 'edit_channel/constants/index';
   import Thumbnail from 'edit_channel/image/views/Thumbnail.vue';
-
-  const PRESET = _.findWhere(Constants.FormatPresets, { id: 'channel_thumbnail' });
 
   export default {
     name: 'ChannelEditor',
@@ -156,9 +154,10 @@
         uploading: false,
         // The way vue handles forms assumes local state. Not in vuex state.
         // Vuex state updates make this a bit awkward.
-        language: '',
-        name: '',
-        description: '',
+        thumbnail: null,
+        language: null,
+        name: null,
+        description: null,
       };
     },
     computed: {
@@ -178,7 +177,7 @@
         return '';
       },
       languages() {
-        return Constants.Languages.sort((langA, langB) =>
+        return Languages.sort((langA, langB) =>
           langA.native_name.localeCompare(langB.native_name)
         );
       },
@@ -196,6 +195,7 @@
       this.language = this.channel.language;
       this.name = this.channel.name;
       this.description = this.channel.description;
+      this.thumbnail = this.channel.thumbnail_url || null;
     },
     methods: {
       ...mapActions('channel_list', ['saveChannel']),
@@ -209,6 +209,8 @@
 
       setChannelThumbnail(data) {
         console.log("CALLED", data.formatted_filename)
+        // send associated thumbnail information to the state
+        // different from what we're using locally
         this.setThumbnail({
           thumbnail: data.formatted_filename,
           encoding: data.encoding
