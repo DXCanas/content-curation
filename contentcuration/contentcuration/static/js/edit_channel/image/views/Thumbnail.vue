@@ -3,7 +3,7 @@
 <div :class="{'thumbnail-uploader': edit}">
   <FileUploadModal
     v-if="edit"
-    :presetId="preset.id"
+    :allowedMimetypes="allowedMimetypes"
     :endpoint="endpoint"
     :trigger="'.upload-trigger'"
     ref="fileUpload"
@@ -114,10 +114,10 @@ export default {
     endpoint() {
       return window.Urls.thumbnail_upload();
     },
-    preset() {
+    allowedMimetypes() {
       // console.info('FormatPresets', FormatPresets);
       let kind = this.kindId === "channel" ? null : this.kindId;
-      return _.findWhere(FormatPresets, {kind_id: kind, thumbnail: true});
+      return _.findWhere(FormatPresets, {kind_id: kind, thumbnail: true}).associated_mimetypes;
     },
     ratioClass() {
       if (this.kindId === "channel") {
