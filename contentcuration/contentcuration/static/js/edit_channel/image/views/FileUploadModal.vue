@@ -49,9 +49,15 @@ export default {
     uploadError: "Upload Error"
   },
   props: {
-    presetId: {
-      type: String,
-      required: true
+    allowedMimetypes: {
+      type: Array,
+      required: false,
+      default() {
+        return _.chain(Constants.FormatPresets)
+                .where({supplementary: false})
+                .pluck('associated_mimetypes')
+                .flatten().uniq().value();
+      },
     },
     params: {
       type: Object,
@@ -78,16 +84,6 @@ export default {
     }
   },
   computed: {
-    allowedMimetypes() {
-      if(this.presetId) {
-        let preset = _.findWhere(Constants.FormatPresets, {id: this.presetId});
-        return preset.associated_mimetypes;
-      }
-      return _.chain(Constants.FormatPresets)
-              .where({supplementary: false})
-              .pluck('associated_mimetypes')
-              .flatten().uniq().value();
-    },
     serverUrl() {
       return "http://localhost:3020";
     }
