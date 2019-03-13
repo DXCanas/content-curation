@@ -1,7 +1,7 @@
 <template>
 
 <div :class="{'thumbnail-uploader': edit}">
-  <FileUpload
+  <FileUploadModal
     v-if="edit"
     :presetId="preset.id"
     :endpoint="endpoint"
@@ -53,7 +53,7 @@
 
 <script>
 
-import FileUpload from './FileUpload.vue';
+import FileUploadModal from './FileUploadModal.vue';
 import { FormatPresets } from 'edit_channel/constants/index';
 import { Croppie } from 'croppie';
 
@@ -98,7 +98,7 @@ export default {
     }
   },
   components: {
-    FileUpload,
+    FileUploadModal,
   },
   data() {
     return {
