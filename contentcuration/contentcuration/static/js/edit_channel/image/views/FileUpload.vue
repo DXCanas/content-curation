@@ -143,7 +143,7 @@ export default {
       .use(Dashboard, {
         trigger: this.trigger,
         inline: this.inline,
-        closeAfterFinish: !!!this.inline,
+        closeAfterFinish: !this.inline,
         target: this.$refs.container,
         replaceTargetContent: true,
         showProgressDetails: true,
@@ -190,8 +190,8 @@ export default {
         target: Dashboard,
         serverUrl: this.serverUrl
       })
-      // .on('file-added', this.addedFile)
-      // .on('upload-success', this.onUpload)
+      .on('file-added', this.addedFile)
+      .on('upload-success', this.onUpload)
       .on('complete', (result) => {
         console.log(result.failed, result.successful[0], result.uploadID);
         console.log(JSON.stringify(result.successful[0]))
@@ -205,6 +205,7 @@ export default {
       this.$emit('started', file);
     },
     onUpload(file, response) {
+      console.log('response', response);
       this.$emit('uploaded', response.body);
       // !this.multiple && this.closeModal();
     },

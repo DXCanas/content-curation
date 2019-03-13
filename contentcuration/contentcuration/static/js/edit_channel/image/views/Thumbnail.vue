@@ -18,20 +18,32 @@
       class="upload-trigger"
       :src="thumbnailSrc"
       :alt="alt"
-      :class="{square: isChannel}"
+      :class="ratioClass"
     />
   </div>
 
-  <div v-if="cropping" class="image-options" :class="{square: isChannel}">
+  <div v-if="cropping" class="image-options" :class="ratioClass">
     <a :title="$tr('cancel')" @click.stop="cancelCrop">not_interested</a>
     <a :title="$tr('submit')" @click.stop="submitCrop">check</a>
   </div>
 
-  <div v-else class="image-options" :class="{square: isChannel}">
+  <div v-else class="image-options" :class="ratioClass">
     <a :title="$tr('upload')" @click="uploadImage">image</a>
-    <a v-if="!isDefault" :title="$tr('crop')" @click="cropping = true">crop</a>
+    <a
+      v-if="value"
+      :title="$tr('crop')"
+      @click="cropping = true"
+    >
+      crop
+    </a>
     <a v-if="kindId !== 'channel'" :title="$tr('generate')" @click="openThumbnailModal">camera</a>
-    <a v-if="!isDefault" :title="$tr('remove')" @click="removeThumbnail">clear</a>
+    <a
+      v-if="value"
+      :title="$tr('remove')"
+      @click="removeThumbnail"
+    >
+      clear
+    </a>
   </div>
 
 </div>
@@ -59,11 +71,11 @@ export default {
     // Toggles edit mode
     edit: {
       type: Boolean,
-      default: true,
+      default: false,
     },
     // URL for thumbnail to be displayed
     // TODO go with a v-model?
-    thumbnailUrl: {
+    value: {
       type: String,
       required: false,
     },
@@ -91,32 +103,27 @@ export default {
   data() {
     return {
       cropping: false,
-      thumbnailSrc: ""
     }
-  },
-  watch: {
-    thumbnailUrl(newVal, oldVal) {
-      this.thumbnailSrc = this.thumbnailUrl || this.defaultUrl;
-    }
-  },
-  mounted() {
-    this.thumbnailSrc = this.thumbnailUrl || this.defaultUrl;
   },
   computed: {
+    // Ensures that we don't propogate changes up to component if we're just using default
+    thumbnailSrc() {
+      return this.value || this.defaultUrl;
+    },
     endpoint() {
       return window.Urls.thumbnail_upload();
     },
     preset() {
-      console.info('FormatPresets', FormatPresets);
-      let kind = (this.isChannel)? null : this.kindId;
+      // console.info('FormatPresets', FormatPresets);
+      let kind = this.kindId === "channel" ? null : this.kindId;
       return _.findWhere(FormatPresets, {kind_id: kind, thumbnail: true});
     },
-    isChannel() {
-      return this.kindId === "channel";
+    ratioClass() {
+      if (this.kindId === "channel") {
+        return 'square';
+      }
+      return '';
     },
-    isDefault() {
-      return this.defaultUrl === this.thumbnailUrl;
-    }
   },
   methods: {
     uploadImage() {
@@ -129,15 +136,15 @@ export default {
       })
     },
     submitCrop() {
-      console.log("SUBMITTING CROPPED IMAGE")
+      console.info("SUBMITTING CROPPED IMAGE")
       this.cropping = false;
     },
     removeThumbnail() {
       this.$emit("removeThumbnail");
-      this.thumbnailSrc = this.defaultUrl;
     },
     onUpload(data) {
-      this.thumbnailSrc = data.path;
+      // Should update prop, as parents are meant to use v-model
+      this.$emit('input', data.path);
       data.encoding = {'base64': data.encoding, 'points': [], 'zoom': 0};
       this.$emit('uploadedThumbnail', data);
     }

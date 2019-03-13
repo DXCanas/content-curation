@@ -1,10 +1,9 @@
 <template>
   <div class="channel-details-top">
     <Thumbnail
-      :thumbnailUrl="channel.thumbnail_url"
+      v-model="channel.thumbnail_url"
       :alt="channel.name"
       :kindId="'channel'"
-      :edit="true"
     />
     <div class="channel-section">
       <div class="language-wrapper">
