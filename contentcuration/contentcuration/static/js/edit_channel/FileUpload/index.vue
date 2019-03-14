@@ -27,7 +27,7 @@ require('@uppy/core/dist/style.css')
 require('@uppy/dashboard/dist/style.css')
 
 export default {
-  name: 'FileUploadModal',
+  name: 'ThumbnailUploadModal',
   $trs: {
     enterUrlToImport: 'Enter URL to import a file',
     import: 'Import',

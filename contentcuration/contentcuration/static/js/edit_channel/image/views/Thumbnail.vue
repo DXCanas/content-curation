@@ -10,7 +10,7 @@
 
       <template v-if="edit">
         <!-- Upload mode -->
-        <FileUploadModal
+        <ThumbnailUploadModal
           v-if="uploading"
           :allowedMimetypes="allowedMimetypes"
           :endpoint="endpoint"
@@ -58,7 +58,7 @@
 
 <script>
 
-import FileUploadModal from './FileUploadModal.vue';
+import ThumbnailUploadModal from './ThumbnailUploadModal.vue';
 import { FormatPresets } from 'edit_channel/constants/index';
 import { Croppie } from 'croppie';
 import _ from 'underscore';
@@ -103,7 +103,7 @@ export default {
     }
   },
   components: {
-    FileUploadModal,
+    ThumbnailUploadModal,
   },
   data() {
     return {
