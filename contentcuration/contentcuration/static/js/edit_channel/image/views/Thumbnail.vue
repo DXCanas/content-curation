@@ -1,6 +1,5 @@
 <template>
 
-  <!-- Superficial classname. Only useful for DOM debugging -->
   <div :class="{'thumbnail-editor': edit}">
       <img
         class="upload-trigger"
@@ -35,7 +34,7 @@
       <!-- Options Menu -->
       <div v-else class="options-menu" :class="ratioClass">
         <!-- Always available -->
-        <a :title="$tr('upload')" @click="uploadImage">
+        <a :title="$tr('upload')" @click="uploading = true">
           image
         </a>
 
@@ -150,6 +149,7 @@ export default {
       this.cropping = false;
     },
     removeThumbnail() {
+      this.$emit('input', null)
       this.$emit("removeThumbnail");
     },
     onUpload(data) {
