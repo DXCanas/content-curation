@@ -14,11 +14,11 @@
           v-if="uploading"
           :allowedMimetypes="allowedMimetypes"
           :endpoint="endpoint"
-          :trigger="'.upload-trigger'"
           @uploaded="onUpload"
           @started="$emit('uploadStarted')"
           @error="$emit('thumbnailError')"
           @cancelled="$emit('uploadCancelled')"
+          @close="uploading = false"
         />
 
         <!-- Crop mode -->
