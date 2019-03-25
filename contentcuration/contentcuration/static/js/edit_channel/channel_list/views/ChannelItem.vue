@@ -11,10 +11,9 @@
     >
       <div class="profile">
         <Thumbnail
-          :thumbnailUrl="picture"
+          :value="picture"
           :alt="channel.name"
-          :kindId="'channel'"
-          :displayOnly="true"
+          kindId="channel"
         />
       </div>
       <div class="channel-information">
@@ -61,10 +60,10 @@
 
   import { mapGetters, mapState } from 'vuex';
   import { setChannelMixin } from '../mixins';
+  import ChannelStar from './ChannelStar.vue';
   import Constants from 'edit_channel/constants/index';
 
   import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
-  import ChannelStar from './ChannelStar.vue';
   import Thumbnail from 'edit_channel/image/views/Thumbnail.vue';
 
   export default {
