@@ -117,7 +117,7 @@ export default {
     },
     // Ensures that we don't propogate changes up to component if we're just using default
     thumbnailSrc() {
-      return this.thumbnailSet ? this.value : this.defaultUrl;
+      return this.value || this.defaultUrl;
     },
     endpoint() {
       return window.Urls.thumbnail_upload();
