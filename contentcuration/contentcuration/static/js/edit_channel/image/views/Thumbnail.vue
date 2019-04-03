@@ -6,16 +6,16 @@
         :src="thumbnailSrc"
         :alt="alt"
         :class="ratioClass"
-      />
+      >
 
       <template v-if="edit">
         <!-- Upload mode -->
-        <ThumbnailUploadModal
+        <FileUpload
           v-if="uploading"
           :allowedMimetypes="allowedMimetypes"
           :endpoint="endpoint"
-          @uploaded="onUpload"
-          @started="$emit('uploadStarted')"
+          @upload="$emit('uploadStarted')"
+          @upload-success="onUpload"
           @error="$emit('thumbnailError')"
           @cancelled="$emit('uploadCancelled')"
           @close="uploading = false"
@@ -58,10 +58,10 @@
 
 <script>
 
-import ThumbnailUploadModal from './ThumbnailUploadModal.vue';
-import { FormatPresets } from 'edit_channel/constants/index';
 import { Croppie } from 'croppie';
 import _ from 'underscore';
+import FileUpload from 'edit_channel/FileUpload/index.vue';
+import { FormatPresets } from 'edit_channel/constants/index';
 
 export default {
   name: 'Thumbnail',
@@ -103,7 +103,7 @@ export default {
     }
   },
   components: {
-    ThumbnailUploadModal,
+    FileUpload,
   },
   data() {
     return {
@@ -152,13 +152,15 @@ export default {
       this.$emit('input', null)
       this.$emit("removeThumbnail");
     },
-    onUpload(data) {
+    onUpload(file, request) {
+      console.log('data', request);
       // Update parent's data (standard v-model functionality)
-      this.$emit('input', data.path);
+      this.$emit('input', request.body.path);
 
       // Prep data to be sent to vuex state, where the change will take place
-      data.encoding = {'base64': data.encoding, 'points': [], 'zoom': 0};
-      this.$emit('uploadedThumbnail', data);
+      this.$emit('uploadedThumbnail', Object.assign({}, request.body, {
+        encoding: {'base64': request.body.encoding, 'points': [], 'zoom': 0},
+      }));
 
       // Ideally, this component receives and emits all the data necessary for submission.
     }
