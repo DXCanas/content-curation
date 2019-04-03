@@ -18,7 +18,7 @@ import {
   Dashboard,
   GoogleDrive,
   Dropbox,
-  URL,
+  Url,
 } from 'uppy';
 
 // Might be a good place to try async imports
@@ -29,13 +29,13 @@ import {
 // import Dropbox from '@uppy/dropbox';
 // import Url from '@uppy/url';
 
+import _ from 'underscore';
 import {
   FormatPresets
 } from 'edit_channel/constants/index';
 
 import get_cookie from 'utils/get_cookie';
 import { alert } from 'edit_channel/utils/dialog.js';
-import _ from 'underscore';
 
 // import ProgressBar from '@uppy/progress-bar';
 // import Retriever from '@uppy/golden-retriever';
@@ -44,7 +44,7 @@ require('@uppy/core/dist/style.css')
 require('@uppy/dashboard/dist/style.css')
 
 export default {
-  name: 'ThumbnailUploadModal',
+  name: 'FileUpload',
   $trs: {
     enterUrlToImport: 'Enter URL to import a file',
     import: 'Import',
@@ -69,12 +69,10 @@ export default {
     windowTitle: {
       type: String,
       required: false,
-      default: this.$tr('dashboardWindowTitle')
     },
     title: {
       type: String,
       required: false,
-      default: this.$tr('DashboardTitle')
     },
     allowedMimetypes: {
       type: Array,
@@ -86,7 +84,7 @@ export default {
                 .flatten().uniq().value();
       },
     },
-    multiple: {
+    allowMultipleUploads: {
       type: Boolean,
       default: false
     },
@@ -113,12 +111,12 @@ export default {
         proudlyDisplayPoweredByUppy: false,
         closeModalOnClickOutside: true,
         onRequestCloseModal() {
-          vueInstance.closeModal();
+          vueInstance.$emit('close');
         },
         locale: {
           strings: {
-            dashboardTitle: this.title,
-            dashboardWindowTitle: this.windowTitle,
+            dashboardTitle: this.title || this.$tr('DashboardTitle'),
+            dashboardWindowTitle: this.windowTitle || this.$tr('dashboardWindowTitle'),
             closeModal: this.$tr('closeModal'),
             done: this.$tr('cancel'),
             dropPaste: this.$tr('dropPaste'),
@@ -144,13 +142,14 @@ export default {
     uppyOptions() {
       return {
         autoProceed: true,
-        debug: window.DEBUG, // set by django
+        debug: window.DEBUG, // set via django
         restrictions: {
           // TODO make these definable
           // maxFileSize: false,
           allowedFileTypes: this.allowedMimetypes,
           maxNumberOfFiles: this.multiple ? null : 1
         },
+        allowMultipleUploads: this.allowMultipleUploads,
         meta: {
           // Acts as more of a template. Will probably need preset
           // csrf: get_cookie('csrftoken'),
@@ -205,26 +204,21 @@ export default {
     },
   },
   created() {
-    this.uppy = Uppy( this.uppyOptions )
+    this.uppy = Uppy(this.uppyOptions);
+
     // Bind all events
+    for (event in this.$listeners) {
+      // Listener will be either a callback function or an array of callbacks
+      const listener = this.$listeners[event];
 
-    // Upload queue
-    .on('file-added', file => this.$emit('fileAdded', file))
-    .on('file-removed', this.onCancel)
-
-    // Per-file
-    // Response depends on upload mechanism
-    .on('upload-success', reponse => this.$emit('uploadSuccess', reponse))
-    .on('upload-error', reponse => this.$emit('uploadError', reponse))
-
-    // Entire job
-    .on('complete', result => this.$emit('complete', result))
-    .on('error', result => this.$emit('error', result))
-    // {
-    //   console.log(result.failed, result.uploadID);
-    //   console.log(JSON.stringify(result.successful[0]))
-    // })
-
+      // When array
+      if (Array.isArray(listener)){
+        listener.forEach(callback => this.uppy.on(event, callback));
+      // When function
+      } else {
+        this.uppy.on(event, listener);
+      }
+    }
 
     // TODO test servers before adding plugins?
     this.uppy.use(XHRUpload, this.xhrUploadOptions);
@@ -234,7 +228,7 @@ export default {
 
     // console.log("CSRF", get_cookie('csrftoken'));
     this.uppy.use(Dashboard, this.dashboardOptions)
-    .use(URL, this.urlUploadOptions)
+    .use(Url, this.urlUploadOptions)
     .use(GoogleDrive, this.gDriveUploadOptions)
     .use(Dropbox, this.dropboxUploadOptions)
 
@@ -251,7 +245,7 @@ export default {
 
 
 <style lang="less">
-@import '../../../../less/global-variables.less';
+@import '../../../less/global-variables.less';
 
 // Need to use !important a lot because uppy's stylesheet
 // has a lot of rules marked as !important :(

@@ -95,10 +95,10 @@
       ...mapState('channel_list', ['activeChannel']),
       ...mapGetters('channel_list', ['getChannel']),
       picture() {
-        return (
-          (this.channel.thumbnail_encoding && this.channel.thumbnail_encoding.base64) ||
-          this.channel.thumbnail_url
-        );
+        if (this.channel.thumbnail_url) {
+          return this.channel.thumbnail_url;
+        }
+        return (this.channel.thumbnail_encoding && this.channel.thumbnail_encoding.base64);
       },
       language() {
         return Constants.Languages.find(language => language.id === this.channel.language);
