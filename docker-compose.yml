@@ -13,6 +13,7 @@ services:
       - minio
       - studio-postgres
       - studio-redis
+      - studio-companion
     ports:
       - "8080:8080"
     environment:
@@ -79,7 +80,37 @@ services:
   studio-redis:
     image: redis:4.0.9
 
+  studio-companion:
+    image: transloadit/companion
+    # probably not necessary, but to be safe
+    volumes:
+      # create anonymous volume
+      - /companion_data
+    environment:
+      COMPANION_CLIENT_ORIGINS:
+      COMPANION_DATADIR: /companion_data
+      COMPANION_DOMAIN: localhost:3020
+      COMPANION_DOMAINS:
+      COMPANION_PROTOCOL:
+      COMPANION_REDIS_URL:
+      COMPANION_SECRET:
+      COMPANION_DROPBOX_KEY:
+      COMPANION_DROPBOX_SECRET:
+      COMPANION_GOOGLE_KEY:
+      COMPANION_GOOGLE_SECRET:
+      COMPANION_INSTAGRAM_KEY:
+      COMPANION_INSTAGRAM_SECRET:
+      COMPANION_AWS_KEY:
+      COMPANION_AWS_SECRET:
+      COMPANION_AWS_BUCKET:
+      COMPANION_AWS_REGION:
+      COMPANION_OAUTH_DOMAIN:
+      COMPANION_UPLOAD_URLS:
+    ports:
+      - "3020:3020"
+
 
 volumes:
   minio_data:
   pgdata:
+  companion_data:
