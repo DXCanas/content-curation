@@ -1,3 +1,5 @@
+import Vue from 'vue';
+import ThumbnailComponent from 'edit_channel/image/views/Thumbnail.vue';
 var _ = require('underscore');
 var Dropzone = require('dropzone');
 var BaseViews = require('edit_channel/views');
@@ -338,11 +340,17 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     return new_format_item;
   },
   file_uploaded: function(request) {
+    // Parse request
     var data = JSON.parse(request.xhr.response).node;
+    // Put into Backbone model
     var new_node = new Models.ContentNodeModel(JSON.parse(data));
+    // add to collection
     this.collection.add(new_node);
+    // create new view for node
     var new_view = this.create_new_view(new_node);
+    // wtf is preview template?
     $(request.previewTemplate).html(new_view.el);
+    // counting each upload in progress
     this.uploads_in_progress--;
     this.update_count();
   },
@@ -492,25 +500,22 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
   },
   create_thumbnail_view: function(onstart, onfinish, onerror) {
     if (!this.thumbnail_view) {
-      var preset_id = _.findWhere(this.model.get('associated_presets'), { thumbnail: true }).id;
-      this.thumbnail_view = new ImageViews.ThumbnailUploadView({
-        model: this.model,
-        preset_id: preset_id,
-        upload_url: window.Urls.image_upload(),
-        default_url: '/static/img/' + this.model.get('kind') + '_placeholder.png',
-        acceptedFiles: Constants.FormatPresets.find(
-          preset => preset.id === preset_id
-        ).associated_mimetypes.join(','),
-        onsuccess: this.set_thumbnail,
-        onremove: this.remove_thumbnail,
-        onerror: onerror,
-        onfinish: onfinish,
-        onstart: onstart,
-        allow_edit: this.allow_edit,
-        is_channel: false,
+      const Thumbnail = Vue.extend(ThumbnailComponent);
+
+      var preset_id = _.findWhere(this.model.get('associated_presets'), { thumbnail: true }).kind_id;
+
+      console.log(this.$('.preview_thumbnail'));
+      this.thumbnail_view = new Thumbnail({
+        // el: this.$('.preview_thumbnail')[0],
+        propsData: {
+          edit: this.allow_edit,
+          value: this.model.get('files').find(file => file.preset.thumbnail),
+          defaultURL: `/static/img/${this.model.get('kind')}_placeholder.png}`,
+          kindId: preset_id,
+        },
       });
     }
-    this.$('.preview_thumbnail').append(this.thumbnail_view.el);
+    this.$('.preview_thumbnail').append(this.thumbnail_view.$mount().$el);
   },
   remove_thumbnail: function() {
     this.set_thumbnail(null, null);
