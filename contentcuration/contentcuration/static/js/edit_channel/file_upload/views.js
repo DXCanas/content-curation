@@ -502,27 +502,61 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
     if (!this.thumbnail_view) {
       const Thumbnail = Vue.extend(ThumbnailComponent);
 
-      var preset_id = _.findWhere(this.model.get('associated_presets'), { thumbnail: true }).kind_id;
+      var kind_id = _.findWhere(this.model.get('associated_presets'), { thumbnail: true }).kind_id;
+
+      const propsData = {
+        edit: this.allow_edit,
+        value: this.model.get('files').find(file => file.preset.thumbnail),
+        defaultURL: `/static/img/${this.model.get('kind')}_placeholder.png}`,
+        kindId: kind_id,
+      };
 
       console.log(this.$('.preview_thumbnail'));
       this.thumbnail_view = new Thumbnail({
         // el: this.$('.preview_thumbnail')[0],
-        propsData: {
-          edit: this.allow_edit,
-          value: this.model.get('files').find(file => file.preset.thumbnail),
-          defaultURL: `/static/img/${this.model.get('kind')}_placeholder.png}`,
-          kindId: preset_id,
-        },
+        propsData,
       });
+
+      this.thumbnail_view.$on('uploadedThumbnail',  response => {
+        this.set_thumbnail(response);
+        onfinish(response);
+      });
+      this.thumbnail_view.$on('removeThumbnail',  this.remove_thumbnail);
+      this.thumbnail_view.$on('thumbnailError',  onerror);
+      this.thumbnail_view.$on('uploadStarted',  onstart);
+      this.thumbnail_view.$on('input', newUrl => {
+        propsData.value = newUrl;
+        console.log(newUrl);
+      } );
+
+
+    //   this.thumbnail_view = new ImageViews.ThumbnailUploadView({
+    //     model: this.model,
+    //     preset_id: preset_id,
+    //     upload_url: window.Urls.image_upload(),
+    //     default_url: '/static/img/' + this.model.get('kind') + '_placeholder.png',
+    //     acceptedFiles: Constants.FormatPresets.find(
+    //       preset => preset.id === preset_id
+    //     ).associated_mimetypes.join(','),
+    //     onsuccess: this.set_thumbnail,
+    //     onremove: this.remove_thumbnail,
+    //     onerror: onerror,
+    //     onfinish: onfinish,
+    //     onstart: onstart,
+    //     allow_edit: this.allow_edit,
+    //     is_channel: false,
+    //   });
     }
     this.$('.preview_thumbnail').append(this.thumbnail_view.$mount().$el);
   },
   remove_thumbnail: function() {
     this.set_thumbnail(null, null);
   },
-  set_thumbnail: function(thumbnailFile, encoding) {
+  set_thumbnail: function(thumbnailRequest, encoding) {
     var newFiles = this.model.get('files').filter(file => !file.preset.thumbnail);
-    if (thumbnailFile) {
+
+    if (thumbnailRequest.file) {
+      const thumbnailFile = new Models.FileModel(thumbnailRequest.file);
       thumbnailFile.set('contentnode', this.model.id);
       newFiles.push(thumbnailFile.toJSON());
     }

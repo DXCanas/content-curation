@@ -69,10 +69,12 @@ export default {
     windowTitle: {
       type: String,
       required: false,
+      default: '',
     },
     title: {
       type: String,
       required: false,
+      default: '',
     },
     allowedMimetypes: {
       type: Array,
@@ -158,7 +160,7 @@ export default {
     },
     xhrUploadOptions() {
       return {
-        endpoint: this.clientUrl,
+        endpoint: this.endpoint,
         // formData: false,
         // bundle: false,
         headers: {
@@ -206,7 +208,7 @@ export default {
   created() {
     this.uppy = Uppy(this.uppyOptions);
 
-    // Bind all events
+    // Bind all Uppy events
     for (event in this.$listeners) {
       // Listener will be either a callback function or an array of callbacks
       const listener = this.$listeners[event];
@@ -219,18 +221,17 @@ export default {
         this.uppy.on(event, listener);
       }
     }
-
-    // TODO test servers before adding plugins?
-    this.uppy.use(XHRUpload, this.xhrUploadOptions);
   },
   mounted() {
     // Using mounted hook because dashboard requires certain DOM elements to be present
 
     // console.log("CSRF", get_cookie('csrftoken'));
     this.uppy.use(Dashboard, this.dashboardOptions)
-    .use(Url, this.urlUploadOptions)
-    .use(GoogleDrive, this.gDriveUploadOptions)
-    .use(Dropbox, this.dropboxUploadOptions)
+    .use(XHRUpload, this.xhrUploadOptions)
+    // .use(Url, this.urlUploadOptions)
+    // .use(GoogleDrive, this.gDriveUploadOptions)
+    // .use(Dropbox, this.dropboxUploadOptions)
+    ;
 
     this.uppy.getPlugin('Dashboard').openModal();
   },
