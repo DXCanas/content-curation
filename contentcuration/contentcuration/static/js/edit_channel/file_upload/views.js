@@ -1,5 +1,5 @@
-import Vue from 'vue';
-import ThumbnailComponent from 'edit_channel/image/views/Thumbnail.vue';
+import newThumbnail from 'edit_channel/image/views/newThumbnail.js';
+
 var _ = require('underscore');
 var Dropzone = require('dropzone');
 var BaseViews = require('edit_channel/views');
@@ -500,22 +500,36 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
   },
   create_thumbnail_view: function(onstart, onfinish, onerror) {
     if (!this.thumbnail_view) {
-      const Thumbnail = Vue.extend(ThumbnailComponent);
 
       var kind_id = _.findWhere(this.model.get('associated_presets'), { thumbnail: true }).kind_id;
 
-      const propsData = {
+      function thumbnailUrl(model){
+        const encodedThumbnail = model.get('thumbnail_encoding');
+        if (encodedThumbnail){
+          return encodedThumbnail.base64;
+        }
+
+        const thumbnailFile = model.get('files').find(file =>
+          file.preset.thumbnail
+        );
+
+        if (thumbnailFile){
+          return thumbnailFile.storage_url;
+        }
+
+        return null;
+      }
+
+      const props = {
         edit: this.allow_edit,
-        value: this.model.get('files').find(file => file.preset.thumbnail),
-        defaultURL: `/static/img/${this.model.get('kind')}_placeholder.png}`,
+        value: thumbnailUrl(this.model),
+        defaultURL: `/static/img/${this.model.get('kind')}_placeholder.png`,
         kindId: kind_id,
       };
 
-      console.log(this.$('.preview_thumbnail'));
-      this.thumbnail_view = new Thumbnail({
-        // el: this.$('.preview_thumbnail')[0],
-        propsData,
-      });
+
+      this.thumbnail_view = newThumbnail(null, props);
+
 
       this.thumbnail_view.$on('uploadedThumbnail',  response => {
         this.set_thumbnail(response);
@@ -525,8 +539,8 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
       this.thumbnail_view.$on('thumbnailError',  onerror);
       this.thumbnail_view.$on('uploadStarted',  onstart);
       this.thumbnail_view.$on('input', newUrl => {
-        propsData.value = newUrl;
-        console.log(newUrl);
+        // Update 'value', which holds url prop
+        this.thumbnail_view.$data.props.value = newUrl;
       } );
 
 
@@ -552,16 +566,19 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
   remove_thumbnail: function() {
     this.set_thumbnail(null, null);
   },
-  set_thumbnail: function(thumbnailRequest, encoding) {
+  set_thumbnail: function(thumbnailRequest) {
+    // All files that are _not_ thumbnails
     var newFiles = this.model.get('files').filter(file => !file.preset.thumbnail);
 
     if (thumbnailRequest.file) {
+      // Add file to model
+      console.log('had to make new file in files');
       const thumbnailFile = new Models.FileModel(thumbnailRequest.file);
       thumbnailFile.set('contentnode', this.model.id);
       newFiles.push(thumbnailFile.toJSON());
     }
     this.model.set('files', newFiles);
-    this.model.set('thumbnail_encoding', encoding);
+    this.model.set('thumbnail_encoding', thumbnailRequest.encoding);
   },
 });
 
