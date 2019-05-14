@@ -1,6 +1,6 @@
 <template>
 
-  <div :class="{'thumbnail-editor': edit}">
+  <div class="thumbnail-viewer" :class="{'thumbnail-editor': edit}">
       <img
         class="upload-trigger"
         :src="thumbnailSrc"
@@ -163,7 +163,7 @@ export default {
       }));
 
       // Ideally, this component receives and emits all the data necessary for submission.
-    }
+    },
   }
 };
 
@@ -177,19 +177,26 @@ export default {
   @default-image-height: 100px;
   @default-square-width: 130px;
 
-  img {
-    width: @default-image-width;
+  // Dimensions
+  .thumbnail-viewer {
     height: @default-image-height;
-    object-fit: cover;
-    object-position: center;
-    &.square {
-      width: @default-square-width;
+    width: @default-image-width;
+    &.square{
       height: @default-square-width;
+      width: @default-square-width;
     }
   }
 
+  img {
+    object-fit: cover;
+    object-position: center;
+  }
+
+  // Edit mode
   .thumbnail-editor {
     img {
+      height: 100%;
+      width: 100%;
       cursor: pointer;
       border: 4px dashed @gray-400;
       opacity: 0.8;
@@ -200,6 +207,7 @@ export default {
     }
   }
 
+
   .options-menu {
     visibility: hidden;
     display: grid;
@@ -209,9 +217,6 @@ export default {
     padding: 5px 10px;
     margin-top: -30px;
     position: relative;
-    &.square {
-      width: @default-square-width;
-    }
     a {
       .material-icons;
       color: @gray-400;
@@ -223,8 +228,6 @@ export default {
   }
 
 </style>
-
-require("images.less");
 require("dropzone/dist/dropzone.css");
 require("croppie/croppie.css");
 var dialog = require("edit_channel/utils/dialog");
