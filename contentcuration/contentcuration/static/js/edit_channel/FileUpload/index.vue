@@ -12,6 +12,7 @@
 // Includes all of our Plugins & Definitions
 
 // Should be a clean, tree-shaken import
+// Might be a good place to try async imports
 import {
   Core as Uppy,
   XHRUpload,
@@ -22,13 +23,6 @@ import {
 } from 'uppy';
 
 // Might be a good place to try async imports
-// import Uppy from '@uppy/core';
-// import XHRUpload from '@uppy/xhr-upload';
-// import Dashboard from '@uppy/dashboard';
-// import GoogleDrive from '@uppy/google-drive';
-// import Dropbox from '@uppy/dropbox';
-// import Url from '@uppy/url';
-
 import _ from 'underscore';
 import {
   FormatPresets
@@ -46,7 +40,8 @@ require('@uppy/dashboard/dist/style.css')
 export default {
   name: 'FileUpload',
   $trs: {
-    enterUrlToImport: 'Enter URL to import a file',
+    browse: 'browse',
+    enterUrlToImport: 'Enter URL to { browse }',
     import: 'Import',
     failedToFetch: 'Companion failed to fetch this URL, please make sure it’s correct',
     enterCorrectUrl: 'Incorrect URL: Please make sure you are entering a direct link to a file',
@@ -54,7 +49,7 @@ export default {
     dashboardTitle: 'Uploading File(s)',
     dashboardWindowTitle: 'Uploading File(s) (Press escape to close)',
     cancel: "Cancel",
-    dropPaste: "Drop files here, paste, or import from",
+    dropPaste: "Drop files here, paste, or { browse } from",
     myDevice: "My Device",
     link: "Link",
     addMoreFiles: "Add more files",
@@ -117,12 +112,13 @@ export default {
         },
         locale: {
           strings: {
-            dashboardTitle: this.title || this.$tr('DashboardTitle'),
+            browse: 'hablablabla',
+            dashboardTitle: this.title || this.$tr('dashboardTitle'),
             dashboardWindowTitle: this.windowTitle || this.$tr('dashboardWindowTitle'),
             closeModal: this.$tr('closeModal'),
             done: this.$tr('cancel'),
-            dropPaste: this.$tr('dropPaste'),
-            dropPasteImport: this.$tr('dropPaste'),
+            dropPaste: this.$tr('dropPaste', { browse: '%{browse}' }),
+            dropPasteImport: this.$tr('dropPaste', { browse: '%{browse}' }),
             myDevice: this.$tr('myDevice'),
             addMoreFiles: this.$tr('addMoreFiles'),
             removeFile: this.$tr('removeFile'),
@@ -137,9 +133,6 @@ export default {
     },
     serverUrl() {
       return "http://localhost:3020";
-    },
-    clientUrl() {
-      return window.location.protocol + "//" + window.location.hostname + ":8080" + this.endpoint;
     },
     uppyOptions() {
       return {
@@ -250,93 +243,93 @@ export default {
 
 // Need to use !important a lot because uppy's stylesheet
 // has a lot of rules marked as !important :(
-.uppy-Dashboard-inner {
-  .uppy-DashboardContent-title {
-    display: none;
-  }
-  .uppy-Dashboard-close {
-    right: 10px !important;
-    color: @gray-500 !important;
-    top: 0px !important;
-  }
-  .uppy-DashboardTabs {
-    .uppy-DashboardTab {
-      .uppy-DashboardTab-btn {
-        width: auto !important;
-        padding: 5px 15px !important;
-        margin: 0px 10px !important;
-        svg {
-          width: 50px !important;
-          height: 50px !important;
-        }
-        .uppy-DashboardTab-name {
-          font-family: @font-family !important;
-          font-weight: bold !important;
-          font-size: 12pt !important;
-        }
-        &:hover .uppy-DashboardTab-name {
-          color: @blue-500 !important;
-        }
-      }
-    }
-
-    .uppy-Dashboard-dropFilesTitle {
-      max-width: 100% !important;
-      font-family: @font-family !important;
-    }
-  }
-}
-
-.uppy-Url {
-  .uppy-c-textInput {
-    .input-form !important;
-    font-family: @font-family !important;
-    outline: none !important;
-    border-bottom-width: 2px !important;
-    border-radius: 0px !important;
-    margin-right: 10px;
-    &:hover {
-      border-color: @blue-500;
-    }
-  }
-  .uppy-Url-importButton {
-    .action-button !important;
-    font-family: @font-family !important;
-    text-transform: uppercase !important;
-  }
-}
-
-.uppy-DashboardContent-bar {
-  .uppy-DashboardContent-back {
-    .action-text !important;
-    font-family: @font-family !important;
-    text-transform: uppercase !important;
-  }
-}
-
-.uppy-Provider-auth {
-  .uppy-Provider-authTitle {
-    max-width: 100% !important;
-    font-family: @font-family !important;
-  }
-  .uppy-Provider-authBtn {
-    .action-button !important;
-    font-weight: bold !important;
-    font-family: @font-family !important;
-  }
-}
-
-.uppy-ProviderBrowser-footer {
-  .uppy-c-btn-primary {
-    .action-button !important;
-    text-transform: uppercase !important;
-    font-family: @font-family !important;
-  }
-  .uppy-c-btn-link {
-    .action-text !important;
-    text-transform: uppercase !important;
-    font-family: @font-family !important;
-  }
-}
+// .uppy-Dashboard-inner {
+//   .uppy-DashboardContent-title {
+//     display: none;
+//   }
+//   .uppy-Dashboard-close {
+//     right: 10px !important;
+//     color: @gray-500 !important;
+//     top: 0px !important;
+//   }
+//   .uppy-DashboardTabs {
+//     .uppy-DashboardTab {
+//       .uppy-DashboardTab-btn {
+//         width: auto !important;
+//         padding: 5px 15px !important;
+//         margin: 0px 10px !important;
+//         svg {
+//           width: 50px !important;
+//           height: 50px !important;
+//         }
+//         .uppy-DashboardTab-name {
+//           font-family: @font-family !important;
+//           font-weight: bold !important;
+//           font-size: 12pt !important;
+//         }
+//         &:hover .uppy-DashboardTab-name {
+//           color: @blue-500 !important;
+//         }
+//       }
+//     }
+//
+//     .uppy-Dashboard-dropFilesTitle {
+//       max-width: 100% !important;
+//       font-family: @font-family !important;
+//     }
+//   }
+// }
+//
+// .uppy-Url {
+//   .uppy-c-textInput {
+//     .input-form !important;
+//     font-family: @font-family !important;
+//     outline: none !important;
+//     border-bottom-width: 2px !important;
+//     border-radius: 0px !important;
+//     margin-right: 10px;
+//     &:hover {
+//       border-color: @blue-500;
+//     }
+//   }
+//   .uppy-Url-importButton {
+//     .action-button !important;
+//     font-family: @font-family !important;
+//     text-transform: uppercase !important;
+//   }
+// }
+//
+// .uppy-DashboardContent-bar {
+//   .uppy-DashboardContent-back {
+//     .action-text !important;
+//     font-family: @font-family !important;
+//     text-transform: uppercase !important;
+//   }
+// }
+//
+// .uppy-Provider-auth {
+//   .uppy-Provider-authTitle {
+//     max-width: 100% !important;
+//     font-family: @font-family !important;
+//   }
+//   .uppy-Provider-authBtn {
+//     .action-button !important;
+//     font-weight: bold !important;
+//     font-family: @font-family !important;
+//   }
+// }
+//
+// .uppy-ProviderBrowser-footer {
+//   .uppy-c-btn-primary {
+//     .action-button !important;
+//     text-transform: uppercase !important;
+//     font-family: @font-family !important;
+//   }
+//   .uppy-c-btn-link {
+//     .action-text !important;
+//     text-transform: uppercase !important;
+//     font-family: @font-family !important;
+//   }
+// }
 
 </style>
