@@ -39,8 +39,9 @@ require('@uppy/dashboard/dist/style.css')
 
 export default {
   name: 'FileUpload',
+  // Weed out unused strings
   $trs: {
-    browse: 'browse',
+    browsePrompt: "Browse your computer's files",
     enterUrlToImport: 'Enter URL to { browse }',
     import: 'Import',
     failedToFetch: 'Companion failed to fetch this URL, please make sure it’s correct',
@@ -49,7 +50,7 @@ export default {
     dashboardTitle: 'Uploading File(s)',
     dashboardWindowTitle: 'Uploading File(s) (Press escape to close)',
     cancel: "Cancel",
-    dropPaste: "Drop files here, paste, or { browse } from",
+    dropPaste: "Drop or paste files here. { browsePrompt }",
     myDevice: "My Device",
     link: "Link",
     addMoreFiles: "Add more files",
@@ -112,13 +113,14 @@ export default {
         },
         locale: {
           strings: {
-            browse: 'hablablabla',
+            // Weed out unused strings
+            browse: this.$tr('browsePrompt'),
             dashboardTitle: this.title || this.$tr('dashboardTitle'),
             dashboardWindowTitle: this.windowTitle || this.$tr('dashboardWindowTitle'),
             closeModal: this.$tr('closeModal'),
             done: this.$tr('cancel'),
-            dropPaste: this.$tr('dropPaste', { browse: '%{browse}' }),
-            dropPasteImport: this.$tr('dropPaste', { browse: '%{browse}' }),
+            dropPaste: this.$tr('dropPaste', { browsePrompt: '%{browse}' }),
+            dropPasteImport: this.$tr('dropPaste', { browsePrompt: '%{browse}' }),
             myDevice: this.$tr('myDevice'),
             addMoreFiles: this.$tr('addMoreFiles'),
             removeFile: this.$tr('removeFile'),
