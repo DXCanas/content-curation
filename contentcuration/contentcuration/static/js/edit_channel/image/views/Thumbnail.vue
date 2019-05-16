@@ -1,12 +1,7 @@
 <template>
 
-  <div class="thumbnail-viewer" :class="{'thumbnail-editor': edit}">
-      <img
-        class="upload-trigger"
-        :src="thumbnailSrc"
-        :alt="alt"
-        :class="ratioClass"
-      >
+  <div class="thumbnail-viewer" :class="{'thumbnail-editor': edit, 'square': isChannel}">
+      <img :src="thumbnailSrc" :alt="alt">
 
       <template v-if="edit">
         <!-- Upload mode -->
@@ -22,7 +17,7 @@
         />
 
         <!-- Crop mode -->
-      <div v-if="cropping" class="options-menu" :class="ratioClass">
+      <div v-if="cropping" class="options-menu">
         <a :title="$tr('cancel')" @click.stop="cancelCrop">
           not_interested
         </a>
@@ -32,7 +27,7 @@
       </div>
 
       <!-- Options Menu -->
-      <div v-else class="options-menu" :class="ratioClass">
+      <div v-else class="options-menu">
         <!-- Always available -->
         <a :title="$tr('upload')" @click="uploading = true">
           image
@@ -100,7 +95,12 @@ export default {
       type: String,
       default: '',
       required: false,
-    }
+    },
+    thumbnailGenerator{
+      type: Function,
+      default: null,
+      required: false,
+    },
   },
   components: {
     FileUpload,
@@ -126,12 +126,6 @@ export default {
       // console.info('FormatPresets', FormatPresets);
       let kind = this.isChannel ? null : this.kindId;
       return _.findWhere(FormatPresets, {kind_id: kind, thumbnail: true}).associated_mimetypes;
-    },
-    ratioClass() {
-      if (this.isChannel) {
-        return 'square';
-      }
-      return '';
     },
     isChannel() {
       return this.kindId === "channel";
@@ -190,13 +184,13 @@ export default {
   img {
     object-fit: cover;
     object-position: center;
+    width: 100%;
+    height: 100%;
   }
 
   // Edit mode
   .thumbnail-editor {
     img {
-      height: 100%;
-      width: 100%;
       cursor: pointer;
       border: 4px dashed @gray-400;
       opacity: 0.8;
