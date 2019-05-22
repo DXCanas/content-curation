@@ -498,13 +498,14 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
     this.model.set('files', this.files.toJSON());
     this.containing_list_view.handle_completed();
   },
-  create_thumbnail_view: function(onstart, onfinish, onerror) {
+  create_thumbnail_view(onstart, onfinish, onerror) {
     if (!this.thumbnail_view) {
 
       var kind_id = _.findWhere(this.model.get('associated_presets'), { thumbnail: true }).kind_id;
 
       function thumbnailUrl(model){
         const encodedThumbnail = model.get('thumbnail_encoding');
+
         if (encodedThumbnail){
           return encodedThumbnail.base64;
         }
@@ -525,7 +526,10 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
         value: thumbnailUrl(this.model),
         defaultURL: `/static/img/${this.model.get('kind')}_placeholder.png`,
         kindId: kind_id,
+        contentNodeId: this.model.get('id'),
       };
+
+      console.info('Model being edited', this.model);
 
 
       this.thumbnail_view = newThumbnail(null, props);
@@ -535,40 +539,19 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
         this.set_thumbnail(response);
         onfinish(response);
       });
+
       this.thumbnail_view.$on('removeThumbnail',  this.remove_thumbnail);
       this.thumbnail_view.$on('thumbnailError',  onerror);
       this.thumbnail_view.$on('uploadStarted',  onstart);
-      this.thumbnail_view.$on('input', newUrl => {
-        // Update 'value', which holds url prop
-        this.thumbnail_view.$data.props.value = newUrl;
-      } );
-
-
-    //   this.thumbnail_view = new ImageViews.ThumbnailUploadView({
-    //     model: this.model,
-    //     preset_id: preset_id,
-    //     upload_url: window.Urls.image_upload(),
-    //     default_url: '/static/img/' + this.model.get('kind') + '_placeholder.png',
-    //     acceptedFiles: Constants.FormatPresets.find(
-    //       preset => preset.id === preset_id
-    //     ).associated_mimetypes.join(','),
-    //     onsuccess: this.set_thumbnail,
-    //     onremove: this.remove_thumbnail,
-    //     onerror: onerror,
-    //     onfinish: onfinish,
-    //     onstart: onstart,
-    //     allow_edit: this.allow_edit,
-    //     is_channel: false,
-    //   });
     }
     this.$('.preview_thumbnail').append(this.thumbnail_view.$mount().$el);
   },
   remove_thumbnail: function() {
     this.set_thumbnail(null, null);
   },
-  set_thumbnail: function(thumbnailRequest) {
+  set_thumbnail(thumbnailRequest) {
     // All files that are _not_ thumbnails
-    var newFiles = this.model.get('files').filter(file => !file.preset.thumbnail);
+    var newFiles = this.model.get('files').filter(file => file.preset && !file.preset.thumbnail);
 
     if (thumbnailRequest.file) {
       // Add file to model
