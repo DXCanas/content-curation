@@ -1,0 +1,337 @@
+<template>
+
+  <!-- Container that Uppy's Dashboard will populate -->
+  <div ref="dashboardTarget"></div>
+
+</template>
+
+
+<script>
+
+// Essentially tightly integrated Vue wrapper for Uppy's Dashboard.
+// Includes all of our Plugins & Definitions
+
+// Should be a clean, tree-shaken import
+// Might be a good place to try async imports
+import {
+  Core as Uppy,
+  XHRUpload,
+  Dashboard,
+  GoogleDrive,
+  Dropbox,
+  Url,
+} from 'uppy';
+
+// Might be a good place to try async imports
+import _ from 'underscore';
+import {
+  FormatPresets
+} from 'edit_channel/constants/index';
+
+import get_cookie from 'utils/get_cookie';
+import { alert } from 'edit_channel/utils/dialog.js';
+
+// import ProgressBar from '@uppy/progress-bar';
+// import Retriever from '@uppy/golden-retriever';
+
+require('@uppy/core/dist/style.css')
+require('@uppy/dashboard/dist/style.css')
+
+export default {
+  name: 'FileUpload',
+  // Weed out unused strings
+  $trs: {
+    browsePrompt: "Browse your computer's files",
+    enterUrlToImport: 'Enter URL to { browse }',
+    import: 'Import',
+    failedToFetch: 'Companion failed to fetch this URL, please make sure it’s correct',
+    enterCorrectUrl: 'Incorrect URL: Please make sure you are entering a direct link to a file',
+    closeModal: 'Close',
+    dashboardTitle: 'Uploading File(s)',
+    dashboardWindowTitle: 'Uploading File(s) (Press escape to close)',
+    cancel: "Cancel",
+    dropPaste: "Drop or paste files here. { browsePrompt }",
+    myDevice: "My Device",
+    link: "Link",
+    addMoreFiles: "Add more files",
+    removeFile: "Remove file",
+    uploadComplete: "Upload Complete",
+    retryUpload: "Retry upload",
+    resumeUpload: "Resume upload",
+    pauseUpload: "Pause upload",
+    uploadError: "Upload Error"
+  },
+  props: {
+    windowTitle: {
+      type: String,
+      required: false,
+      default: '',
+    },
+    title: {
+      type: String,
+      required: false,
+      default: '',
+    },
+    allowedMimetypes: {
+      type: Array,
+      required: false,
+      default() {
+        return _.chain(FormatPresets)
+                .where({supplementary: false})
+                .pluck('associated_mimetypes')
+                .flatten().uniq().value();
+      },
+    },
+    allowMultipleUploads: {
+      type: Boolean,
+      default: false
+    },
+    endpoint: {
+      type: String,
+      default: window.Urls.file_create()
+    },
+  },
+  computed: {
+    dashboardOptions() {
+      // Used in a hook within Dashboard
+      const vueInstance = this;
+
+      return {
+        // Dashboard complains about lack of trigger.
+        // We don't need it, as well call open manually.
+        trigger: null,
+        // inline: this.inline,
+        // closeAfterFinish: !this.inline,
+        target: this.$refs.dashboardTarget,
+        replaceTargetContent: true,
+        showProgressDetails: true,
+        // showLinkToFileUploadResult: false,
+        proudlyDisplayPoweredByUppy: false,
+        closeModalOnClickOutside: true,
+        onRequestCloseModal() {
+          vueInstance.$emit('close');
+        },
+        locale: {
+          strings: {
+            // Weed out unused strings
+            browse: this.$tr('browsePrompt'),
+            dashboardTitle: this.title || this.$tr('dashboardTitle'),
+            dashboardWindowTitle: this.windowTitle || this.$tr('dashboardWindowTitle'),
+            closeModal: this.$tr('closeModal'),
+            done: this.$tr('cancel'),
+            dropPaste: this.$tr('dropPaste', { browsePrompt: '%{browse}' }),
+            dropPasteImport: this.$tr('dropPaste', { browsePrompt: '%{browse}' }),
+            myDevice: this.$tr('myDevice'),
+            addMoreFiles: this.$tr('addMoreFiles'),
+            removeFile: this.$tr('removeFile'),
+            uploadComplete: this.$tr('uploadComplete'),
+            retryUpload: this.$tr('retryUpload'),
+            cancelUpload: this.$tr('cancel'),
+            resumeUpload: this.$tr('resumeUpload'),
+            pauseUpload: this.$tr('pauseUpload')
+          }
+        },
+      };
+    },
+    serverUrl() {
+      return "http://localhost:3020";
+    },
+    uppyOptions() {
+      return {
+        autoProceed: true,
+        debug: window.DEBUG, // set via django
+        restrictions: {
+          // TODO make these definable
+          // maxFileSize: false,
+          allowedFileTypes: this.allowedMimetypes,
+          maxNumberOfFiles: this.multiple ? null : 1
+        },
+        allowMultipleUploads: this.allowMultipleUploads,
+        meta: {
+          // Acts as more of a template. Will probably need preset
+          // csrf: get_cookie('csrftoken'),
+        },
+      };
+    },
+    xhrUploadOptions() {
+      return {
+        endpoint: this.endpoint,
+        // formData: false,
+        // bundle: false,
+        headers: {
+          'X-CSRFToken': get_cookie('csrftoken'),
+          // 'Authorization': "Token " + "13a002460ce0e3aee2faa17e57e80cd41d3ce38a",
+          // 'Authorization': get_cookie('csrftoken')
+        },
+        // rely on uppy's error event for errors
+        // getResponseError: (responseText, xhr) => {
+          // console.error(this.$tr("uploadError"), responseText, xhr);
+          // alert(this.$tr("uploadError"), responseText);
+          // this.closeModal();
+          // return new Error(responseText)
+        // }
+      };
+    },
+    urlUploadOptions() {
+      return {
+        target: Dashboard,
+        serverUrl: this.serverUrl,
+        title: this.$tr('link'),
+        locale: {
+          strings: {
+            import: this.$tr('import'),
+            enterUrlToImport: this.$tr('enterUrlToImport'),
+            failedToFetch: this.$tr('failedToFetch'),
+            enterCorrectUrl: this.$tr('enterCorrectUrl')
+          }
+        }
+      };
+    },
+    gDriveUploadOptions() {
+      return {
+        target: Dashboard,
+        serverUrl: this.serverUrl
+      };
+    },
+    dropboxUploadOptions() {
+      return {
+        target: Dashboard,
+        serverUrl: this.serverUrl
+      };
+    },
+  },
+  created() {
+    this.uppy = Uppy(this.uppyOptions);
+
+    // Bind all Uppy events
+    for (event in this.$listeners) {
+      // Listener will be either a callback function or an array of callbacks
+      const listener = this.$listeners[event];
+
+      // When array
+      if (Array.isArray(listener)){
+        listener.forEach(callback => this.uppy.on(event, callback));
+      // When function
+      } else {
+        this.uppy.on(event, listener);
+      }
+    }
+  },
+  mounted() {
+    // Using mounted hook because dashboard requires certain DOM elements to be present
+
+    // console.log("CSRF", get_cookie('csrftoken'));
+    this.uppy.use(Dashboard, this.dashboardOptions)
+    .use(XHRUpload, this.xhrUploadOptions)
+    // .use(Url, this.urlUploadOptions)
+    // .use(GoogleDrive, this.gDriveUploadOptions)
+    // .use(Dropbox, this.dropboxUploadOptions)
+    ;
+
+    this.uppy.getPlugin('Dashboard').openModal();
+  },
+  methods: {
+    registerUppyPlugin(){
+      // TODO registers plugin after testing for functionality
+    },
+  }
+};
+
+</script>
+
+
+<style lang="less">
+@import '../../../less/global-variables.less';
+
+// Need to use !important a lot because uppy's stylesheet
+// has a lot of rules marked as !important :(
+// .uppy-Dashboard-inner {
+//   .uppy-DashboardContent-title {
+//     display: none;
+//   }
+//   .uppy-Dashboard-close {
+//     right: 10px !important;
+//     color: @gray-500 !important;
+//     top: 0px !important;
+//   }
+//   .uppy-DashboardTabs {
+//     .uppy-DashboardTab {
+//       .uppy-DashboardTab-btn {
+//         width: auto !important;
+//         padding: 5px 15px !important;
+//         margin: 0px 10px !important;
+//         svg {
+//           width: 50px !important;
+//           height: 50px !important;
+//         }
+//         .uppy-DashboardTab-name {
+//           font-family: @font-family !important;
+//           font-weight: bold !important;
+//           font-size: 12pt !important;
+//         }
+//         &:hover .uppy-DashboardTab-name {
+//           color: @blue-500 !important;
+//         }
+//       }
+//     }
+//
+//     .uppy-Dashboard-dropFilesTitle {
+//       max-width: 100% !important;
+//       font-family: @font-family !important;
+//     }
+//   }
+// }
+//
+// .uppy-Url {
+//   .uppy-c-textInput {
+//     .input-form !important;
+//     font-family: @font-family !important;
+//     outline: none !important;
+//     border-bottom-width: 2px !important;
+//     border-radius: 0px !important;
+//     margin-right: 10px;
+//     &:hover {
+//       border-color: @blue-500;
+//     }
+//   }
+//   .uppy-Url-importButton {
+//     .action-button !important;
+//     font-family: @font-family !important;
+//     text-transform: uppercase !important;
+//   }
+// }
+//
+// .uppy-DashboardContent-bar {
+//   .uppy-DashboardContent-back {
+//     .action-text !important;
+//     font-family: @font-family !important;
+//     text-transform: uppercase !important;
+//   }
+// }
+//
+// .uppy-Provider-auth {
+//   .uppy-Provider-authTitle {
+//     max-width: 100% !important;
+//     font-family: @font-family !important;
+//   }
+//   .uppy-Provider-authBtn {
+//     .action-button !important;
+//     font-weight: bold !important;
+//     font-family: @font-family !important;
+//   }
+// }
+//
+// .uppy-ProviderBrowser-footer {
+//   .uppy-c-btn-primary {
+//     .action-button !important;
+//     text-transform: uppercase !important;
+//     font-family: @font-family !important;
+//   }
+//   .uppy-c-btn-link {
+//     .action-text !important;
+//     text-transform: uppercase !important;
+//     font-family: @font-family !important;
+//   }
+// }
+
+</style>

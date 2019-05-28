@@ -1,9 +1,17 @@
 <template>
   <div class="channel-editor">
-    <div ref="channelthumbnail" class="channel-thumbnail">
-&nbsp;
-    </div>
 
+    <Thumbnail
+      v-model="thumbnail"
+      kindId="channel"
+      class="channel-thumbnail"
+      :edit="true"
+      @removeThumbnail="removeChannelThumbnail"
+      @uploadedThumbnail="setChannelThumbnail"
+      @uploadStarted="uploading = true"
+      @thumbnailError="uploading = false"
+      @uploadCancelled="uploading = false"
+    />
 
     <form class="channel-section" @submit.prevent="submitChannel">
       <!-- Previously used h4, which carries semantic meaning. Size is just style -->
@@ -114,14 +122,11 @@
 
 <script>
 
-  import _ from 'underscore';
   import { mapGetters, mapActions, mapMutations, mapState } from 'vuex';
   import { tabMixin } from '../mixins';
   import { getBackboneChannel } from '../utils';
-  import Constants from 'edit_channel/constants/index';
-  import { ThumbnailUploadView } from 'edit_channel/image/views';
-
-  const PRESET = _.findWhere(Constants.FormatPresets, { id: 'channel_thumbnail' });
+  import { Languages } from 'edit_channel/constants/index';
+  import Thumbnail from 'edit_channel/image/views/Thumbnail.vue';
 
   export default {
     name: 'ChannelEditor',
@@ -140,15 +145,19 @@
       saving: 'Saving...',
     },
     mixins: [tabMixin],
+    components: {
+      Thumbnail
+    },
     data() {
       return {
         saving: false,
         uploading: false,
         // The way vue handles forms assumes local state. Not in vuex state.
         // Vuex state updates make this a bit awkward.
-        language: '',
-        name: '',
-        description: '',
+        thumbnail: null,
+        language: null,
+        name: null,
+        description: null,
       };
     },
     computed: {
@@ -168,7 +177,7 @@
         return '';
       },
       languages() {
-        return Constants.Languages.sort((langA, langB) =>
+        return Languages.sort((langA, langB) =>
           langA.native_name.localeCompare(langB.native_name)
         );
       },
@@ -186,9 +195,7 @@
       this.language = this.channel.language;
       this.name = this.channel.name;
       this.description = this.channel.description;
-    },
-    mounted() {
-      this.loadThumbnailUploader();
+      this.thumbnail = this.channel.thumbnail_url || null;
     },
     methods: {
       ...mapActions('channel_list', ['saveChannel']),
@@ -200,35 +207,13 @@
         setLanguage: 'SET_CHANNEL_LANGUAGE',
       }),
 
-      /* Handle thumbnail options */
-      loadThumbnailUploader: function() {
-        new ThumbnailUploadView({
-          model: getBackboneChannel(this.channel),
-          el: this.$refs.channelthumbnail,
-          preset_id: PRESET.id,
-          upload_url: window.Urls.thumbnail_upload(),
-          acceptedFiles: PRESET.associated_mimetypes.join(','),
-          image_url: this.channel.thumbnail_url,
-          default_url: '/static/img/kolibri_placeholder.png',
-          onsuccess: this.setChannelThumbnail,
-          onerror: () => {
-            this.uploading = false;
-          },
-          oncancel: () => {
-            this.uploading = false;
-          },
-          onstart: () => {
-            this.uploading = true;
-          },
-          onremove: this.removeChannelThumbnail,
-          allow_edit: true,
-          is_channel: true,
-        });
-      },
-      setChannelThumbnail(thumbnail, encoding, formattedName) {
+      setChannelThumbnail(data) {
+        console.log("CALLED", data.formatted_filename)
+        // send associated thumbnail information to the state
+        // different from what we're using locally
         this.setThumbnail({
-          thumbnail: formattedName,
-          encoding: encoding,
+          thumbnail: data.formatted_filename,
+          encoding: data.encoding
         });
         this.uploading = false;
       },

@@ -10,7 +10,11 @@
       @click="openChannel"
     >
       <div class="profile">
-        <img class="channel-pic" :alt="channel.name" :src="picture">
+        <Thumbnail
+          :value="picture"
+          :alt="channel.name"
+          kindId="channel"
+        />
       </div>
       <div class="channel-information">
         <div class="channel-options-wrapper">
@@ -40,15 +44,8 @@
         </p>
       </div>
       <div class="updated-time">
-        {{ $tr(
-          'lastUpdated',
-          {
-            'updated': $formatDate(
-              channel.modified,
-              {day:'numeric', month:'short', 'year':'numeric'}
-            )
-          })
-        }} <!-- TODO: change to formatRelative -->
+        <!-- TODO: change to formatRelative -->
+        {{ $tr('lastUpdated', {'updated': $formatDate(channel.modified, {day:'numeric', month:'short', 'year':'numeric'})}) }}
       </div>
     </div>
     <div class="is-selected">
@@ -65,7 +62,9 @@
   import { setChannelMixin } from '../mixins';
   import ChannelStar from './ChannelStar.vue';
   import Constants from 'edit_channel/constants/index';
+
   import CopyToken from 'edit_channel/sharedComponents/CopyToken.vue';
+  import Thumbnail from 'edit_channel/image/views/Thumbnail.vue';
 
   export default {
     name: 'ChannelItem',
@@ -78,6 +77,7 @@
     components: {
       CopyToken,
       ChannelStar,
+      Thumbnail,
     },
     mixins: [setChannelMixin],
     props: {
@@ -95,10 +95,10 @@
       ...mapState('channel_list', ['activeChannel']),
       ...mapGetters('channel_list', ['getChannel']),
       picture() {
-        return (
-          (this.channel.thumbnail_encoding && this.channel.thumbnail_encoding.base64) ||
-          this.channel.thumbnail_url
-        );
+        if (this.channel.thumbnail_url) {
+          return this.channel.thumbnail_url;
+        }
+        return (this.channel.thumbnail_encoding && this.channel.thumbnail_encoding.base64);
       },
       language() {
         return Constants.Languages.find(language => language.id === this.channel.language);
@@ -172,6 +172,10 @@
       min-height: @channel-container-height;
       .profile {
         height: @channel-container-height * 0.9;
+        /deep/ img {
+          width: @channel-thumbnail-size;
+          height: @channel-thumbnail-size;
+        }
       }
       .channel-information {
         padding-left: 10px;

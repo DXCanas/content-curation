@@ -1,3 +1,5 @@
+import newThumbnail from 'edit_channel/image/views/newThumbnail.js';
+
 var _ = require('underscore');
 var Dropzone = require('dropzone');
 var BaseViews = require('edit_channel/views');
@@ -338,11 +340,17 @@ var FileUploadList = BaseViews.BaseEditableListView.extend({
     return new_format_item;
   },
   file_uploaded: function(request) {
+    // Parse request
     var data = JSON.parse(request.xhr.response).node;
+    // Put into Backbone model
     var new_node = new Models.ContentNodeModel(JSON.parse(data));
+    // add to collection
     this.collection.add(new_node);
+    // create new view for node
     var new_view = this.create_new_view(new_node);
+    // wtf is preview template?
     $(request.previewTemplate).html(new_view.el);
+    // counting each upload in progress
     this.uploads_in_progress--;
     this.update_count();
   },
@@ -490,39 +498,70 @@ var FormatEditorItem = BaseViews.BaseListNodeItemView.extend({
     this.model.set('files', this.files.toJSON());
     this.containing_list_view.handle_completed();
   },
-  create_thumbnail_view: function(onstart, onfinish, onerror) {
+  create_thumbnail_view(onstart, onfinish, onerror) {
     if (!this.thumbnail_view) {
-      var preset_id = _.findWhere(this.model.get('associated_presets'), { thumbnail: true }).id;
-      this.thumbnail_view = new ImageViews.ThumbnailUploadView({
-        model: this.model,
-        preset_id: preset_id,
-        upload_url: window.Urls.image_upload(),
-        default_url: '/static/img/' + this.model.get('kind') + '_placeholder.png',
-        acceptedFiles: Constants.FormatPresets.find(
-          preset => preset.id === preset_id
-        ).associated_mimetypes.join(','),
-        onsuccess: this.set_thumbnail,
-        onremove: this.remove_thumbnail,
-        onerror: onerror,
-        onfinish: onfinish,
-        onstart: onstart,
-        allow_edit: this.allow_edit,
-        is_channel: false,
+
+      var kind_id = _.findWhere(this.model.get('associated_presets'), { thumbnail: true }).kind_id;
+
+      function thumbnailUrl(model){
+        const encodedThumbnail = model.get('thumbnail_encoding');
+
+        if (encodedThumbnail){
+          return encodedThumbnail.base64;
+        }
+
+        const thumbnailFile = model.get('files').find(file =>
+          file.preset.thumbnail
+        );
+
+        if (thumbnailFile){
+          return thumbnailFile.storage_url;
+        }
+
+        return null;
+      }
+
+      const props = {
+        edit: this.allow_edit,
+        value: thumbnailUrl(this.model),
+        defaultURL: `/static/img/${this.model.get('kind')}_placeholder.png`,
+        kindId: kind_id,
+        contentNodeId: this.model.get('id'),
+      };
+
+      console.info('Model being edited', this.model);
+
+
+      this.thumbnail_view = newThumbnail(null, props);
+
+
+      this.thumbnail_view.$on('uploadedThumbnail',  response => {
+        this.set_thumbnail(response);
+        onfinish(response);
       });
+
+      this.thumbnail_view.$on('removeThumbnail',  this.remove_thumbnail);
+      this.thumbnail_view.$on('thumbnailError',  onerror);
+      this.thumbnail_view.$on('uploadStarted',  onstart);
     }
-    this.$('.preview_thumbnail').append(this.thumbnail_view.el);
+    this.$('.preview_thumbnail').append(this.thumbnail_view.$mount().$el);
   },
   remove_thumbnail: function() {
     this.set_thumbnail(null, null);
   },
-  set_thumbnail: function(thumbnailFile, encoding) {
-    var newFiles = this.model.get('files').filter(file => !file.preset.thumbnail);
-    if (thumbnailFile) {
+  set_thumbnail(thumbnailRequest) {
+    // All files that are _not_ thumbnails
+    var newFiles = this.model.get('files').filter(file => file.preset && !file.preset.thumbnail);
+
+    if (thumbnailRequest.file) {
+      // Add file to model
+      console.log('had to make new file in files');
+      const thumbnailFile = new Models.FileModel(thumbnailRequest.file);
       thumbnailFile.set('contentnode', this.model.id);
       newFiles.push(thumbnailFile.toJSON());
     }
     this.model.set('files', newFiles);
-    this.model.set('thumbnail_encoding', encoding);
+    this.model.set('thumbnail_encoding', thumbnailRequest.encoding);
   },
 });
 
