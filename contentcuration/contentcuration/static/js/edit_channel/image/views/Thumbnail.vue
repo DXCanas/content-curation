@@ -177,7 +177,7 @@ export default {
       console.log('Thumbnail generation requested');
       $.ajax({
         method: 'POST',
-        url: `/api/generate_thumbnail/${this.contentNodeId}`,
+        url: window.Urls.generate_thumbnail(this.contentNodeId),
         success: result => {
           const response = JSON.parse(result)
           this.$emit('uploadedThumbnail', response);
@@ -188,16 +188,6 @@ export default {
             this.$emit('thumbnailError', error);
         },
       });
-      // }).then(imageFileModel => {
-      //   console.log('imageFileModel',imageFileModel);
-      //   this.$emit('generation', imageFileModel);
-      //   // self.$('#thumbnail_area').removeClass('loading');
-      //   // self.model = result.file;
-      //   // self.encoding = result.encoding;
-      //   // self.render_preview();
-      //   // self.enable_generate();
-      // }).catch(error => {
-      // });
     },
   }
 };
